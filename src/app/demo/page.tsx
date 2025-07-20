@@ -6,19 +6,24 @@ import Footer from '@/components/Footer'
 
 interface VerificationResult {
   type: string
-  status: 'valid' | 'invalid' | 'error'
-  message: string
-  details?: any
+  veracity: 'true' | 'false' | 'uncertain'
+  confidence: number
+  reasoning: string
+  explanation: string
 }
 
 export default function DemoPage() {
   const [inputData, setInputData] = useState('')
-  const [verificationType, setVerificationType] = useState('email')
+  const [verificationType, setVerificationType] = useState('medical-claim')
   const [isLoading, setIsLoading] = useState(false)
   const [results, setResults] = useState<VerificationResult[]>([])
   const [apiKey, setApiKey] = useState('')
 
   const verificationTypes = [
+    { value: 'medical-claim', label: 'Medical Claim', description: 'Verify medical claims and health information' },
+    { value: 'drug-info', label: 'Drug Information', description: 'Check drug safety and dosage information' },
+    { value: 'symptom-check', label: 'Symptom Analysis', description: 'Analyze symptoms and medical conditions' },
+    { value: 'treatment-verify', label: 'Treatment Verification', description: 'Verify treatment recommendations' },
     { value: 'email', label: 'Email Validation', description: 'Verify email format and domain' },
     { value: 'phone', label: 'Phone Number', description: 'Validate phone number format' },
     { value: 'credit-card', label: 'Credit Card', description: 'Check credit card number validity' },
@@ -60,34 +65,36 @@ export default function DemoPage() {
       console.error('Verification error:', error)
       setResults([{
         type: verificationType,
-        status: 'error',
-        message: 'Failed to verify data. Please check your API key and try again.'
+        veracity: 'uncertain',
+        confidence: 0.0,
+        reasoning: 'Failed to verify data. Please check your API key and try again.',
+        explanation: 'Unable to complete verification at this time.'
       }])
     } finally {
       setIsLoading(false)
     }
   }
 
-  const getStatusColor = (status: string) => {
-    switch (status) {
-      case 'valid':
+  const getStatusColor = (veracity: string) => {
+    switch (veracity) {
+      case 'true':
         return 'text-green-600 bg-green-100 border-green-200'
-      case 'invalid':
+      case 'false':
         return 'text-red-600 bg-red-100 border-red-200'
-      case 'error':
+      case 'uncertain':
         return 'text-yellow-600 bg-yellow-100 border-yellow-200'
       default:
         return 'text-gray-600 bg-gray-100 border-gray-200'
     }
   }
 
-  const getStatusIcon = (status: string) => {
-    switch (status) {
-      case 'valid':
+  const getStatusIcon = (veracity: string) => {
+    switch (veracity) {
+      case 'true':
         return '✅'
-      case 'invalid':
+      case 'false':
         return '❌'
-      case 'error':
+      case 'uncertain':
         return '⚠️'
       default:
         return '❓'
@@ -207,22 +214,20 @@ export default function DemoPage() {
                 {results.map((result, index) => (
                   <div
                     key={index}
-                    className={`p-4 rounded-lg border ${getStatusColor(result.status)}`}
+                    className={`p-4 rounded-lg border ${getStatusColor(result.veracity)}`}
                   >
                     <div className="flex items-start space-x-3">
-                      <span className="text-xl">{getStatusIcon(result.status)}</span>
+                      <span className="text-xl">{getStatusIcon(result.veracity)}</span>
                       <div className="flex-1">
                         <h3 className="font-semibold capitalize">
                           {result.type.replace('-', ' ')} Verification
                         </h3>
-                        <p className="text-sm mt-1">{result.message}</p>
-                        {result.details && (
-                          <div className="mt-2 text-sm">
-                            <pre className="bg-white bg-opacity-50 p-2 rounded text-xs overflow-x-auto">
-                              {JSON.stringify(result.details, null, 2)}
-                            </pre>
-                          </div>
-                        )}
+                        <div className="text-sm mt-2 space-y-2">
+                          <p><strong>Veracity:</strong> {result.veracity}</p>
+                          <p><strong>Confidence:</strong> {(result.confidence * 100).toFixed(1)}%</p>
+                          <p><strong>AI Reasoning:</strong> {result.reasoning}</p>
+                          <p><strong>Web Research:</strong> {result.explanation}</p>
+                        </div>
                       </div>
                     </div>
                   </div>
